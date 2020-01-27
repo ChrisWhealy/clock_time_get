@@ -31,7 +31,7 @@ To run this small demo, do the following
 
 ## Coding
 
-Thw WebAssembly text [source code](./wasm_lib/clock_time_get.wat) contains lots of explanatory comments and (shock, horror!) meaningful variable names...
+The WebAssembly Text [source code](./wasm_lib/clock_time_get.wat) contains lots of explanatory comments and (shock, horror!) meaningful variable names...
 
 Hopefully, this will make the program flow almost entirely self-explanatory
 
