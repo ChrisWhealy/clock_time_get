@@ -17,7 +17,7 @@ To run this small demo, do the following
     & npm i
     ```
 
-1. Run the WASM module
+1. Run the WASM module, and you should see output similar to the following:
 
     ```bash
     $ node server.js 
@@ -31,14 +31,14 @@ There is a discrepancy between the [documented interface to the WASI function `c
 The docs say the interface should use the type declaration:
 
 ```WebAssemblyText
-  (type $__wasi-clockTimeFnType (func (param i32 i64) (result i64)))
-  (import "wasi_unstable" "clock_time_get" (func $wasi_unstable.clock_time_get (type $__wasi-clockTimeFnType)))
+(type $__wasi-clockTimeFnType (func (param i32 i64) (result i64)))
+(import "wasi_unstable" "clock_time_get" (func $wasi_unstable.clock_time_get (type $__wasi-clockTimeFnType)))
 ```
 
 But I can only get it to work using:
 
 ```WebAssemblyText
-  (type $__wasi-clockTimeFnType (func (param i32 i64 i32) (result i32)))
-  (import "wasi_unstable" "clock_time_get" (func $wasi_unstable.clock_time_get (type $__wasi-clockTimeFnType)))
+(type $__wasi-clockTimeFnType (func (param i32 i64 i32) (result i32)))
+(import "wasi_unstable" "clock_time_get" (func $wasi_unstable.clock_time_get (type $__wasi-clockTimeFnType)))
 ```
 
