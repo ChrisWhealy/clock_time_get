@@ -1,0 +1,20 @@
+{
+  "name": "clock-time-get",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChrisWhealy/clock_time_get.git"
+  },
+  "author": "Chris Whealy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ChrisWhealy/clock_time_get/issues"
+  },
+  "homepage": "https://github.com/ChrisWhealy/clock_time_get#readme",
+  "dependencies": {
+    "@wasmer/wasi": "^0.6.0",
+    "@wasmer/wasm-transformer": "^0.6.0"
+  }
+}
