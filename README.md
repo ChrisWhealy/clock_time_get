@@ -15,6 +15,11 @@ To run this small demo, do the following
 
     ```bash
     $ npm i
+    npm notice created a lockfile as package-lock.json. You should commit this file.
+    npm WARN clock-time-get@1.0.0 No description
+
+    added 8 packages from 7 contributors and audited 9 packages in 2.819s
+    found 0 vulnerabilities
     ```
 
 1. Run the WASM module, and you should see output similar to the following:
