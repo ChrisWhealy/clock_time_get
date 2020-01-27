@@ -164,22 +164,23 @@
     ;; Convert binary time data to a character string
     (block
       ;; Set initial value for loop variables
-      (set_local $count       (i32.const 8))
-      (set_local $str-offset  (i32.const 20))
-      (set_local $time-offset (i32.const 15))
+      (set_local $count       (i32.const 8))    ;; Expected number of time data bytes
+      (set_local $str-offset  (i32.const 20))   ;; Offset of the character string
+      (set_local $time-offset (i32.const 15))   ;; Offset of lowest order byte of time data
 
       ;; For each of the 8 time value bytes
-      ;; Here, we allowing for little-endian byte order, so the
-      ;; time data is read backwards from offset 15 down to 8
+      ;; We must allow for the fact that the time data is stored in little-endian byte order,
+      ;; so we read the bytes in reverse-offset order, start at offset 15 down to offset 8
       (loop
         ;; Terminate the loop if the counter has reached zero
         (br_if 1 (i32.eq (get_local $count) (i32.const 0)))
 
-        ;; Transform upper nybble of current byte to text format and write it to offset $str-offset
+        ;; Transform the upper nybble of the current time data byte into text format
+        ;; Write the resulting ASCII character to the offset held in $str-offset
         (i32.store8 (get_local $str-offset) (call $upper-nybble-to-char (get_local $time-offset)))
         (set_local $str-offset (call $incr (get_local $str-offset)))
 
-        ;; Transform lower nybble of current byte to text format and write it to offset $str-offset
+        ;; Now transform the lower nybble...
         (i32.store8 (get_local $str-offset) (call $lower-nybble-to-char (get_local $time-offset)))
 
         (set_local $str-offset  (call $incr (get_local $str-offset)))
