@@ -3,6 +3,7 @@
   ;; Type declarations
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   (type $__wasi-clockTimeFnType (func (param i32 i64 i32) (result i32)))
+  ;; (type $__wasi-clockTimeFnType (func (param i32 i64) (result i64)))
   (type $__wasi-fdWriteFnType   (func (param i32 i32 i32 i32) (result i32)))
 
   (type $unitFnType (func))
@@ -152,6 +153,13 @@
       (i32.const 8)     ;; Offset of returned data
     )
     drop
+    ;; (i64.store
+    ;;   (i32.const 8)
+    ;;   (call $wasi_unstable.clock_time_get
+    ;;     (i32.const 0)     ;; Clock id
+    ;;     (i64.const 1)     ;; Precision
+    ;;   )
+    ;; )
     
     ;; Convert binary time data to a character string
     (block
