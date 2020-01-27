@@ -14,7 +14,7 @@ To run this small demo, do the following
 1. Install the required packages
 
     ```bash
-    & npm i
+    $ npm i
     ```
 
 1. Run the WASM module, and you should see output similar to the following:
