@@ -29,6 +29,13 @@ To run this small demo, do the following
     000036fadb30d49f
     ```
 
+## Coding
+
+Thw WebAssembly text [source code](./wasm_lib/clock_time_get.wat) contains lots of explanatory comments and (shock, horror!) meaningful variable names...
+
+Hopefully, this will make the program flow almost entirely self-explanatory
+
+
 ## Known Issues
 
 There is a discrepancy between the [documented interface to the WASI function `clock_time_get`](https://github.com/WebAssembly/WASI/blob/master/phases/snapshot/docs.md#-clock_time_getid-clockid-precision-timestamp---errno-timestamp) and the interface needed to make this program actually work

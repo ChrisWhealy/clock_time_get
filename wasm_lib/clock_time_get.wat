@@ -183,10 +183,12 @@
         ;; Now transform the lower nybble...
         (i32.store8 (get_local $str-offset) (call $lower-nybble-to-char (get_local $time-offset)))
 
+        ;; Update loop variables
         (set_local $str-offset  (call $incr (get_local $str-offset)))
         (set_local $time-offset (call $decr (get_local $time-offset)))
         (set_local $count       (call $decr (get_local $count)))
 
+        ;; Restart loop
         (br 0)
       )
     )
@@ -194,7 +196,7 @@
     ;; Store a terminating line feed at the end of the text string (offset 36)
     (i32.store (i32.const 36) (call $line-feed))
 
-    ;; Store offest of string data (20) at offset 0
+    ;; Store offset of string data (20) at offset 0
     (i32.store (i32.const 0) (i32.const 20))
 
     ;; Store length of string data (17) at offset 4
