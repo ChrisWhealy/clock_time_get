@@ -54,5 +54,5 @@ The WebAssembly Binary Toolkit can either be installed by building it directly f
 
 The WebAssembly Text [source code](./wasm_lib/clock_time_get.wat) contains lots of explanatory comments and (shock, horror!) meaningful variable names...
 
-Hopefully, this will make the understanding the WebAssembly program flow almost entirely self-explanatory.  You will notice however, that the bulk of the coding is concerned with translating a binary value to a text string
+Hopefully, this will make understanding the WebAssembly program flow almost entirely self-explanatory.  Its worth pointing out that the bulk of the coding in this module is concerned with translating the binary time value into an ASCII text string.
 
