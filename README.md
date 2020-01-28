@@ -1,8 +1,19 @@
-# clock_time_get
+# Calling `clock_time_get` from WebAssembly
 
-A small WebAssembly Text program that calls the native "OS" function `clock_time_get` and writes the returned value to standard out using a WASI call to `fd_write`
+A small WebAssembly Text program that uses the [WebAssembly System Interface](https://wasi.dev/) (WASI) to call two native "OS" functions: `clock_time_get` and `fd_write`.
 
-To run this small demo, do the following
+This basic application simply writes the CPU clock time in nanoseconds to standard out.
+
+## Prequisites
+
+The WebAssembly Text file `clock_time_get.wat` must be compiled into a WASM module.  Differ tools are available for this, but two of the simplest are:
+
+1. Use the `wat2wasm` command line tool found in the [WebAssembly Binary Toolkit](https://github.com/WebAssembly/wabt)
+1. If you use Microsoft's Visual Studio Code editor, open the `.wat` file, right-click anywhere in the source code and select "Save as WebAssembly binary file"
+
+The WebAssembly Binary Toolkit can either be installed by building it directly from the Git repository listed above, or if you already have the [WebAssembly Package Manager](https://wapm.io/package/wabt) installed, you can install it using the command `wapm install wabt`.
+
+## Setup Instructions
 
 1. Clone this repo into some local development directory
 
@@ -11,9 +22,19 @@ To run this small demo, do the following
     $ git clone https://github.com/ChrisWhealy/clock_time_get.git
     ```
 
-1. Install the required packages
+1. Change into the `wasm_lib` directory and run the command to compile the WebAssembly Text file
 
     ```bash
+    $ cd wasm_lib
+    $ wat2wasm clock_time_get.wat
+    ```
+
+    This will create the file `clock_time_get.wasm`
+
+1. Change back to the main repo folder and install the required packages
+
+    ```bash
+    $ cd ..
     $ npm i
     npm notice created a lockfile as package-lock.json. You should commit this file.
     npm WARN clock-time-get@1.0.0 No description
@@ -22,7 +43,7 @@ To run this small demo, do the following
     found 0 vulnerabilities
     ```
 
-1. Run the WASM module, and you should see output similar to the following:
+1. Run the NodeJS file `server.js` that then executes this WASM module.  You should see output similar to the following:
 
     ```bash
     $ node server.js 
@@ -33,24 +54,5 @@ To run this small demo, do the following
 
 The WebAssembly Text [source code](./wasm_lib/clock_time_get.wat) contains lots of explanatory comments and (shock, horror!) meaningful variable names...
 
-Hopefully, this will make the program flow almost entirely self-explanatory
-
-
-## Known Issues
-
-There is a discrepancy between the [documented interface to the WASI function `clock_time_get`](https://github.com/WebAssembly/WASI/blob/master/phases/snapshot/docs.md#-clock_time_getid-clockid-precision-timestamp---errno-timestamp) and the interface needed to make this program actually work
-
-The docs say the interface should use the type declaration:
-
-```WebAssemblyText
-(type $__wasi-clockTimeFnType (func (param i32 i64) (result i64)))
-(import "wasi_unstable" "clock_time_get" (func $wasi_unstable.clock_time_get (type $__wasi-clockTimeFnType)))
-```
-
-But I can only get it to work using:
-
-```WebAssemblyText
-(type $__wasi-clockTimeFnType (func (param i32 i64 i32) (result i32)))
-(import "wasi_unstable" "clock_time_get" (func $wasi_unstable.clock_time_get (type $__wasi-clockTimeFnType)))
-```
+Hopefully, this will make the understanding the WebAssembly program flow almost entirely self-explanatory.  You will notice however, that the bulk of the coding is concerned with translating a binary value to a text string
 
