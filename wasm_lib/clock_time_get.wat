@@ -132,7 +132,7 @@
     (local $time-offset i32)
 
     (call $wasi_unstable.clock_time_get
-      (i32.const 0)     ;; Clock id
+      (i32.const 0)     ;; Clock id 0 = Realtime clock
       (i64.const 1)     ;; Precision
       (i32.const 8)     ;; Offset of returned data
     )
