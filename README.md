@@ -6,12 +6,13 @@ This basic application simply writes the CPU clock time in nanoseconds to standa
 
 ## Prequisites
 
-The WebAssembly Text file `clock_time_get.wat` must be compiled into a WASM module.  Differ tools are available for this, but two of the simplest are:
+The WebAssembly Text file `clock_time_get.wat` must be compiled into a WASM module.  Different tools are available for this, but two of the simplest are:
 
-1. Use the `wat2wasm` command line tool found in the [WebAssembly Binary Toolkit](https://github.com/WebAssembly/wabt)
-1. If you use Microsoft's Visual Studio Code editor, open the `.wat` file, right-click anywhere in the source code and select "Save as WebAssembly binary file"
+1. The `wat2wasm` command line tool found in the [WebAssembly Binary Toolkit](https://github.com/WebAssembly/wabt)
 
-The WebAssembly Binary Toolkit can either be installed by building it directly from the Git repository listed above, or if you already have the [WebAssembly Package Manager](https://wapm.io/package/wabt) installed, you can install it using the command `wapm install wabt`.
+    `wabt` can either be installed by building it directly from the Git repository listed above, or if you already have the [WebAssembly Package Manager](https://wapm.io/package/wabt) installed, you can install it using the command `wapm install wabt`.
+
+1. In Microsoft's Visual Studio Code editor, open the `.wat` file, right-click anywhere in the source code and select "Save as WebAssembly binary file"
 
 ## Setup Instructions
 

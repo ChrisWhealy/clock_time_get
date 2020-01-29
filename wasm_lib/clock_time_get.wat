@@ -2,7 +2,7 @@
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ;; Type declarations
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  (type $__wasi-clockTimeFnType (func (param i32 i32 i32)     (result i32)))
+  (type $__wasi-clockTimeFnType (func (param i32 i64 i32)     (result i32)))
   (type $__wasi-fdWriteFnType   (func (param i32 i32 i32 i32) (result i32)))
 
   (type $unitFnType (func))
@@ -121,24 +121,6 @@
   (func $_start (type $unitFnType))
 
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  ;; What's the time Mr WASI? (in binary format)
-  ;; Input        : []
-  ;; Output       : i64
-  ;; Side-effects : None
-  ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  (func $getTimeNanosBin (result i64)
-    (call $wasi_unstable.clock_time_get
-      (i32.const 0)     ;; Clock id
-      (i32.const 1)     ;; Precision
-      (i32.const 8)     ;; Offset of returned data
-    )
-    drop
-
-    i32.const 8
-    i64.load
-  )
-
-  ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ;; What's the time Mr WASI? (in string format)
   ;; Input        : []
   ;; Output       : []
@@ -151,7 +133,7 @@
 
     (call $wasi_unstable.clock_time_get
       (i32.const 0)     ;; Clock id
-      (i32.const 1)     ;; Precision
+      (i64.const 1)     ;; Precision
       (i32.const 8)     ;; Offset of returned data
     )
     drop
@@ -160,12 +142,12 @@
     (block
       ;; Set initial value for loop variables
       (set_local $count       (i32.const 8))    ;; Expected number of time data bytes
-      (set_local $str-offset  (i32.const 20))   ;; Offset of the character string
+      (set_local $str-offset  (i32.const 20))   ;; Offset of character string being created
       (set_local $time-offset (i32.const 15))   ;; Offset of lowest order byte of time data
 
       ;; For each of the 8 time value bytes
-      ;; We must allow for the fact that the time data is stored in little-endian byte order,
-      ;; so we read the bytes in reverse-offset order, start at offset 15 down to offset 8
+      ;; The time data is stored in little-endian byte order; therefore, we need to read the
+      ;; bytes in reverse-offset order, starting at offset 15 and moving down to offset 8
       (loop
         ;; Terminate the loop if the counter has reached zero
         (br_if 1 (i32.eq (get_local $count) (i32.const 0)))
@@ -218,6 +200,5 @@
   ;; Export functions for public API
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   (export "_start"          (func $_start))
-  (export "getTimeNanosBin" (func $getTimeNanosBin))
   (export "getTimeNanosStr" (func $getTimeNanosStr))
 )

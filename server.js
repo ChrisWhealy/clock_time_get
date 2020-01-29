@@ -19,24 +19,25 @@ let wasi = new WASI({
 const startWasiTask =
   async pathToWasmFile => {
     // Fetch the WASM module and transform its interface
+    // This is needed because one of the aruments to wasi_unstable.clock_time_get
+    // is an i64, and currently, passing a JavaScript BigInt to a WASM i64 is not
+    // directly supported without first transforming the interface.
+    // See https://docs.wasmer.io/wasmer-js/wasmer-js-module-transformation for
+    // more details on this subject
     let wasmBytes        = new Uint8Array(fs.readFileSync(pathToWasmFile))
     let loweredWasmBytes = lowerI64Imports(wasmBytes)
 
     let { instance } = await WebAssembly.instantiate(loweredWasmBytes, {
-//    let { instance } = await WebAssembly.instantiate(wasmBytes, {
       wasi_unstable: wasi.wasiImport
     })
 
-    // Start the WASI instance
-    // In this case, this does not invoke any WASM functionality
+    // Start the WASI instance (which in this case merely fires up the instance
+    // without invoking any WASM functionality)
     wasi.start(instance)
 
     // What's the time, Mr WASI?
     // The response is written directly to standard out
     instance.exports.getTimeNanosStr()
-
-    // Even with module transformation, this statement blows up...
-    // console.log(`64-bit time value returned from WASM : ${instance.exports.getTimeNanosBin()}`)
   }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
