@@ -30,8 +30,8 @@
 
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ;; Convert a byte's upper or lower nybbles to the corresponding ASCII character
-  ;; Input  : i32 -> Integer in the range 0x0 to 0xF
-  ;; Output : i32 -> ASCII character of input value left on the stack
+  ;; Input  : [ i32 ]        Integer in the range 0x0 to 0xF
+  ;; Output : [ i32 ]        ASCII character of input value left on the stack
   ;;
   ;; To access a byte's upper nybble, mask out the lower nybble by AND'ing it with 0xF0
   ;; For example, if we receive input 6c
@@ -108,6 +108,58 @@
   (func $hexE (result i32) i32.const 101)            ;; ASCII "e"
   (func $hexF (result i32) i32.const 102)            ;; ASCII "f"
 
+  ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ;; Convert a numeric binary value to an ASCII hex string.
+  ;; This function assumes that the numeric binary data is stored in litte-endian format
+  ;; Input        : [ $bin-offset : i32        Offset to start of binary data
+  ;;                , $bin-len    : i32        Length of binary data
+  ;;                , $str-offset : i32        Location at which the resulting character string will be written
+  ;;                ]
+  ;; Output       : [ $str-len : i32 ]         Length of generated character string
+  ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  (func $bin-to-hex-str
+        (param $bin-offset i32)
+        (param $bin-len    i32)
+        (param $str-offset i32)
+        (result i32)
+
+    (local $loop-offset i32)
+    (local $count       i32)
+
+    (block
+      ;; Calculate offset of lowest order byte of binary data
+      ;; $loop-offset = $bin-offset + $bin_len - 1
+      (set_local $loop-offset (i32.add (get_local $bin-offset) (call $decr (get_local $bin-len))))
+
+      ;; Initialise loop counter
+      (set_local $count (get_local $bin-len))
+
+      (loop
+        ;; Terminate the loop if the counter has reached zero
+        (br_if 1 (i32.eq (get_local $count) (i32.const 0)))
+
+        ;; Transform the upper nybble of the current byte into text format
+        ;; Write the resulting ASCII character to the offset held in $str-offset
+        (i32.store8 (get_local $str-offset) (call $upper-nybble-to-char (get_local $loop-offset)))
+        (set_local $str-offset (call $incr (get_local $str-offset)))
+
+        ;; Now transform the lower nybble...
+        (i32.store8 (get_local $str-offset) (call $lower-nybble-to-char (get_local $loop-offset)))
+        (set_local $str-offset  (call $incr (get_local $str-offset)))
+
+        ;; Update loop variables
+        (set_local $loop-offset (call $decr (get_local $loop-offset)))
+        (set_local $count       (call $decr (get_local $count)))
+
+        ;; Restart loop
+        (br 0)
+      )
+    )
+
+    ;; Return the length of the generated character string
+    (i32.mul (get_local $bin-len) (i32.const 2))
+  )
+
   ;; *******************************************************************************************************************
   ;; Public API functions
   ;; *******************************************************************************************************************
@@ -121,63 +173,46 @@
   (func $_start (type $unitFnType))
 
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  ;; What's the time Mr WASI? (in string format)
+  ;; What's the time Mr WASI?
   ;; Input        : []
   ;; Output       : []
-  ;; Side-effects : Writes 17 bytes of time data to standard out
+  ;; Side-effects : Writes 17 bytes of ASCII time data to standard out
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   (func $getTimeNanosStr (type $unitFnType)
-    (local $count       i32)
-    (local $str-offset  i32)
-    (local $time-offset i32)
+    (local $bin-offset i32)
+    (local $bin-len    i32)
+    (local $str-offset i32)
+    (local $str-len    i32)
+
+    (set_local $bin-offset (i32.const 8))
+    (set_local $bin-len    (i32.const 8))
+    (set_local $str-offset (i32.const 20))
 
     (call $wasi_unstable.clock_time_get
-      (i32.const 0)     ;; Clock id 0 = Realtime clock
-      (i64.const 1)     ;; Precision
-      (i32.const 8)     ;; Offset of returned data
+      (i32.const 0)           ;; Clock id 0 = Realtime clock
+      (i64.const 1)           ;; Precision
+      (get_local $bin-offset) ;; Offset of returned data
     )
     drop
     
-    ;; Convert binary time data to a character string
-    (block
-      ;; Set initial value for loop variables
-      (set_local $count       (i32.const 8))    ;; Expected number of time data bytes
-      (set_local $str-offset  (i32.const 20))   ;; Offset of character string being created
-      (set_local $time-offset (i32.const 15))   ;; Offset of lowest order byte of time data
-
-      ;; For each of the 8 time value bytes
-      ;; The time data is stored in little-endian byte order; therefore, we need to read the
-      ;; bytes in reverse-offset order, starting at offset 15 and moving down to offset 8
-      (loop
-        ;; Terminate the loop if the counter has reached zero
-        (br_if 1 (i32.eq (get_local $count) (i32.const 0)))
-
-        ;; Transform the upper nybble of the current time data byte into text format
-        ;; Write the resulting ASCII character to the offset held in $str-offset
-        (i32.store8 (get_local $str-offset) (call $upper-nybble-to-char (get_local $time-offset)))
-        (set_local $str-offset (call $incr (get_local $str-offset)))
-
-        ;; Now transform the lower nybble...
-        (i32.store8 (get_local $str-offset) (call $lower-nybble-to-char (get_local $time-offset)))
-
-        ;; Update loop variables
-        (set_local $str-offset  (call $incr (get_local $str-offset)))
-        (set_local $time-offset (call $decr (get_local $time-offset)))
-        (set_local $count       (call $decr (get_local $count)))
-
-        ;; Restart loop
-        (br 0)
-      )
+    ;; Convert binary data to an ASCII hex string
+    (set_local $str-len (call $bin-to-hex-str (get_local $bin-offset)
+                                              (get_local $bin-len)
+                                              (get_local $str-offset)
+                        )
     )
 
-    ;; Store a terminating line feed at the end of the text string (offset 36)
-    (i32.store (i32.const 36) (call $line-feed))
+    ;; Store a terminating line feed at the end of the text string ($str-offset + $str-len)
+    (i32.store (i32.add (get_local $str-offset) (get_local $str-len)) (call $line-feed))
 
-    ;; Store offset of string data (20) at offset 0
-    (i32.store (i32.const 0) (i32.const 20))
+    ;; Generated character string is now one byte longer
+    (set_local $str-len (i32.add (get_local $str-len) (i32.const 1)))
 
-    ;; Store length of string data (17) at offset 4
-    (i32.store (i32.const 4) (i32.const 17))
+    ;; Store offset of string data at offset 0
+    (i32.store (i32.const 0) (get_local $str-offset))
+
+    ;; Store length of string data ($str-len) at offset 4
+    (i32.store (i32.const 4) (get_local $str-len))
 
     ;; Write string time value to standard out
     (call $wasi_unstable.fd_write
