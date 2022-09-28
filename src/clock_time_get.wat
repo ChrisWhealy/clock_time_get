@@ -15,10 +15,7 @@
 
   ;; Memory offsets
   (global $i64_bin_loc i32 (i32.const 16))
-  (global $sys_time_bin_len i32 (i32.const 8))
-
   (global $i64_str_loc i32 (i32.const 24))
-
   (global $fd_write_data_loc i32 (i32.const 44))
 
   (memory (export "memory") 1
@@ -37,11 +34,10 @@
   (func $decr (param $val i32) (result i32) (i32.sub (local.get $val) (i32.const 1)))
 
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  ;; Convert a nybble to the corresponding ASCII character.
-  ;; Extract the nybble value, then used it as the offset at which the corresponding ASCII character can be found
+  ;; Use the nybble value as the offset at which the corresponding ASCII character can be found
   ;;
-  ;; Upper nybble : AND with 0xF0 then shift right 4 places
-  ;; Lower nybble : AND with 0x0F
+  ;; Offset from upper nybble = byte AND'ed with 0xF0 then shifted right 4 places
+  ;; Offset from lower nybble = byte AND'ed with 0x0F
   (func $upper_nybble_to_char (param $b i32) (result i32) (i32.load8_u (i32.shr_u (i32.and (local.get $b) (global.get $0xF0)) (i32.const 4))))
   (func $lower_nybble_to_char (param $b i32) (result i32) (i32.load8_u (i32.and (local.get $b) (global.get $0x0F))))
 
@@ -59,6 +55,7 @@
     (local $upper_char  i32)
     (local $lower_char  i32)
 
+    ;; Set offset of current string byte to the output string's start offset
     (local.set $str_loc (global.get $i64_str_loc))
 
     ;; Since the i64 number is stored in little endian format, the highest order byte is stored at the furthest offset
@@ -74,6 +71,7 @@
       (local.set $upper_char (call $upper_nybble_to_char (local.get $this_byte)))
       (local.set $lower_char (call $lower_nybble_to_char (local.get $this_byte)))
 
+      ;; Store each ASCII char and bump the output offset
       (i32.store8 (local.get $str_loc) (local.get $upper_char))
       (local.set $str_loc (call $incr (local.get $str_loc)))
 
@@ -119,7 +117,7 @@
       (i32.const 1)                   ;; fd 1 = standard out
       (global.get $fd_write_data_loc) ;; Location of string data's offset/length
       (i32.const 1)                   ;; Number of strings to write
-      (i32.const 52)                  ;; Location at which the number of bytes written will be stored
+      (i32.const 52)                  ;; Number of bytes written stored at this location
     )
   )
 

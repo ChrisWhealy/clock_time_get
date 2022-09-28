@@ -2,7 +2,8 @@
 
 A small WebAssembly Text program that uses the [WebAssembly System Interface](https://wasi.dev/) (WASI) to call two native "OS" functions: `clock_time_get` and `fd_write`.
 
-This basic application simply writes the CPU clock time in nanoseconds to standard out.
+This basic application simply writes the raw CPU clock time as a hexadecimal string to standard out.
+That said, the majority of code in this example is concerned with converting a little-endian `i64` into printable ASCII&hellip;  😃
 
 ## Prerequisites
 
