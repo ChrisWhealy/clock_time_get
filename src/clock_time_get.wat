@@ -42,7 +42,7 @@
   (func $lower_nybble_to_char (param $b i32) (result i32) (i32.load8_u (i32.and (local.get $b) (global.get $0x0F))))
 
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  ;; Convert an i64 to an ASCII hex string.
+  ;; Convert the 8 bytes of an i64 into a 16 character ASCII hex string.
   ;; Input  : []
   ;; Output : []
   ;;
@@ -63,7 +63,7 @@
     ;; See https://en.wikipedia.org/wiki/Endianness for more details
     (local.set $loop_offset (i32.add (global.get $i64_bin_loc) (i32.const 7)))
 
-    ;; Parse each byte of the i64 in little endian byte order
+    ;; Working from right to left (little endian byte order), parse each byte of the i64
     (loop $next_byte
       (local.set $this_byte (i32.load8_u (local.get $loop_offset)))
 
@@ -87,7 +87,7 @@
   )
 
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  ;; Terminate a string with line feed then write it to standard out
+  ;; Append a line feed character to the supplied string, then write it to standard out
   ;; Input : [
   ;;   $str_loc : i32 - String location
   ;;   $str_len : i32 - String length
@@ -117,7 +117,7 @@
       (i32.const 1)                   ;; fd 1 = standard out
       (global.get $fd_write_data_loc) ;; Location of string data's offset/length
       (i32.const 1)                   ;; Number of strings to write
-      (i32.const 52)                  ;; Number of bytes written stored at this location
+      (i32.const 52)                  ;; fd_write stores the number of bytes written at this location
     )
   )
 
@@ -126,7 +126,7 @@
   ;; *******************************************************************************************************************
 
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  ;; Writes the raw system clock value (i64) as an LF-terminated string to standard out
+  ;; Convert the raw system clock value to a character string and write it to standard out
   ;; Input  : []
   ;; Output : []
   (func (export "writeTimeNanos")
@@ -145,14 +145,14 @@
   )
 
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  ;; Test function i64_to_hex_str
+  ;; Supply test value to function i64_to_hex_str
   ;; Input  : [i64]
   ;; Output : []
-  (func (export "test")
-        (param $i64_val i64)
+  (func (export "test_i64ToHexStr")
+        (param $i64_arg i64)
 
     ;; Store the test value at the same location $wasi_clock_time_get writes its data
-    (i64.store (global.get $i64_bin_loc) (local.get $i64_val))
+    (i64.store (global.get $i64_bin_loc) (local.get $i64_arg))
 
     ;; Convert i64 to ASCII and print
     (call $i64_to_hex_str)
