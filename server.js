@@ -38,8 +38,8 @@ const startWasiTask =
 // Everything starts here
 startWasiTask(wasmFilePath)
   .then(wasmFns => {
-    wasmFns.test_i64ToHexStr(BigInt(testVal1))
-    wasmFns.test_i64ToHexStr(BigInt(testVal2))
+    // wasmFns.test_i64ToHexStr(BigInt(testVal1))
+    // wasmFns.test_i64ToHexStr(BigInt(testVal2))
 
     wasmFns.writeTimeNanos()
   })

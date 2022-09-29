@@ -38,12 +38,24 @@ Install the [WebAssembly Binary Toolkit](https://github.com/WebAssembly/wabt)
 
     ```bash
     $ node server.js
-    000036fadb30d49f
+    00070041b44d076e
     ```
+
+1. If you wish to see the test output, uncomment the commented lines at the end of file `server.js` shown below:
+
+   ```javascript
+   startWasiTask(wasmFilePath)
+     .then(wasmFns => {
+       // wasmFns.test_i64ToHexStr(BigInt(testVal1))
+       // wasmFns.test_i64ToHexStr(BigInt(testVal2))
+
+       wasmFns.writeTimeNanos()
+   })
+   ```
 
 ## Coding
 
-The WebAssembly Text [source code](./src/clock_time_get.wat) contains lots of explanatory comments and (shock, horror!) meaningful variable names...
+The WebAssembly Text [source code](./src/clock_time_get.wat) uses meaningful variable names and contains lots of explanatory comments.
 
 Hopefully, this will make understanding the WebAssembly program flow almost entirely self-explanatory.
 Its worth pointing out that the bulk of the coding in this module is concerned with translating the bytes of an `i64` value into an ASCII text string.

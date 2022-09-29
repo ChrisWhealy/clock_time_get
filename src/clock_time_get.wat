@@ -34,10 +34,10 @@
   (func $decr (param $val i32) (result i32) (i32.sub (local.get $val) (i32.const 1)))
 
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  ;; Use the nybble value as the offset at which the corresponding ASCII character can be found
+  ;; The nybble value is used as the offset at which the corresponding ASCII character can be found
   ;;
-  ;; Offset from upper nybble = byte AND'ed with 0xF0 then shifted right 4 places
-  ;; Offset from lower nybble = byte AND'ed with 0x0F
+  ;; Offset using upper nybble = byte AND'ed with 0xF0 then shifted right 4 places
+  ;; Offset using lower nybble = byte AND'ed with 0x0F
   (func $upper_nybble_to_char (param $b i32) (result i32) (i32.load8_u (i32.shr_u (i32.and (local.get $b) (global.get $0xF0)) (i32.const 4))))
   (func $lower_nybble_to_char (param $b i32) (result i32) (i32.load8_u (i32.and (local.get $b) (global.get $0x0F))))
 
@@ -46,8 +46,8 @@
   ;; Input  : []
   ;; Output : []
   ;;
-  ;; This function takes no arguments and returns nothing because the input i64 value and the output string are read
-  ;; from and written to globally referenced memory locations
+  ;; This function does not accept arguments and does not "return" a value because globally referenced memory locations
+  ;; are used instead
   (func $i64_to_hex_str
     (local $str_loc     i32)
     (local $loop_offset i32)
