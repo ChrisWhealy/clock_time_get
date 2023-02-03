@@ -1,6 +1,6 @@
 # Calling `clock_time_get` from WebAssembly
 
-A small WebAssembly Text program that uses the [WebAssembly System Interface](https://wasi.dev/) (WASI) to call two native "OS" functions: `clock_time_get` and `fd_write`.
+A small WebAssembly Text program that uses the [WebAssembly System Interface](https://wasi.dev/) provided by NodeJS to call two native "OS" functions: `clock_time_get` and `fd_write`.
 
 This basic application simply writes the raw CPU clock time as a hexadecimal string to standard out.
 That said, the majority of code in this example is concerned with converting a little-endian `i64` into printable ASCII&hellip;  😃
@@ -11,35 +11,29 @@ Install the [WebAssembly Binary Toolkit](https://github.com/WebAssembly/wabt)
 
 ## Local Execution
 
-1. Clone this repo
-
-    ```bash
-    $ cd <some_development_directory>
-    $ git clone https://github.com/ChrisWhealy/clock_time_get.git
-    ```
-
-1. Install the required NPM packages
-
-    ```bash
-    $ cd ./clock_time_get
-    $ npm i
-    ```
-
 1. Compile the WebAssembly Text program
 
     ```bash
-    $ wat2wasm ./src/clock_time_get.wat
+    $ wat2wasm ./src/clock_time_get.wat -o ./bin/clock_time_get.wasm
     ```
 
-    This will create the file `clock_time_get.wasm`
+    The file `clock_time_get.wasm` now exists in the `bin/` directory.
 
-1. Run the NodeJS file `server.js` that executes this WASM module.
+1. Run the program that executes this WASM module.
    You should see output similar to the following:
 
     ```bash
-    $ node server.js
-    00070041b44d076e
+    $ npm run start
+
+    > clock-time-get@1.1.0 start
+    > node --experimental-wasi-unstable-preview1 ./server.mjs
+
+    (node:60922) ExperimentalWarning: WASI is an experimental feature. This feature could change at any time
+    (Use `node --trace-warnings ...` to show where the warning was created)
+    174057f55779b2f0
     ```
+
+    Notice that in order to make use of the NodeJS `WASI` library, the command line flag `--experimental-wasi-unstable-preview1` must be given.
 
 1. If you wish to see the test output, uncomment the commented lines at the end of file `server.js` shown below:
 

@@ -1,20 +1,19 @@
 {
   "name": "clock-time-get",
-  "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "version": "1.1.0",
+  "description": "WASM module that writes raw system clock value to standard out",
+  "main": "server.mjs",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ChrisWhealy/clock_time_get.git"
+  },
+  "scripts": {
+    "start": "node --experimental-wasi-unstable-preview1 ./server.mjs"
   },
   "author": "Chris Whealy",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/ChrisWhealy/clock_time_get/issues"
   },
-  "homepage": "https://github.com/ChrisWhealy/clock_time_get#readme",
-  "dependencies": {
-    "@wasmer/wasi": "^0.6.0",
-    "@wasmer/wasm-transformer": "^0.6.0"
-  }
+  "homepage": "https://github.com/ChrisWhealy/clock_time_get#readme"
 }
