@@ -8,7 +8,9 @@
     "url": "git+https://github.com/ChrisWhealy/clock_time_get.git"
   },
   "scripts": {
-    "start": "node --experimental-wasi-unstable-preview1 ./server.mjs"
+    "build": "wat2wasm ./src/clock_time_get.wat -o ./bin/clock_time_get.wasm",
+    "start": "node --experimental-wasi-unstable-preview1 ./server.mjs",
+    "tests": "node --experimental-wasi-unstable-preview1 ./tests/index.mjs"
   },
   "author": "Chris Whealy",
   "license": "MIT",

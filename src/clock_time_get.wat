@@ -1,12 +1,12 @@
 (module
   ;; Host functions provided by WASI
-  (import "wasi_unstable" "clock_time_get"
+  (import "wasi" "clock_time_get"
     (func $wasi_clock_time_get
           (param i32 i64 i32)
           (result i32)
     )
   )
-  (import "wasi_unstable" "fd_write"
+  (import "wasi" "fd_write"
     (func $wasi_fd_write
           (param i32 i32 i32 i32)
           (result i32)
@@ -15,14 +15,14 @@
 
   (memory (export "memory") 1
     ;; 00 -> 15  16b ASCII character lookup table
-    ;; 16         8b System clock value - binary
-    ;; 24        16b System clock value - ASCII string
+    ;; 16         8b i64 system clock value
+    ;; 24        16b i64 system clock value as ASCII string
     ;; 44         8b fd_write output string offset + length
     ;; 52         4b Number of bytes written by fd_write
   )
 
   ;; Memory offsets
-  (global $i64_bin_loc       i32 (i32.const 16))
+  (global $time_loc          i32 (i32.const 16))
   (global $i64_str_loc       i32 (i32.const 24))
   (global $fd_write_data_loc i32 (i32.const 44))
 
@@ -38,9 +38,9 @@
 
     ;; Set offset of current string byte to the output string's start offset
     (local.set $str_loc (global.get $i64_str_loc))
-    (local.set $loop_offset (i32.add (global.get $i64_bin_loc) (i32.const 7)))
+    (local.set $loop_offset (i32.add (global.get $time_loc) (i32.const 7)))
 
-    ;; Working from right to left (little-endian byte order), parse each byte of the i64
+    ;; Using little-endian byte order (working from right to left), parse each byte of the i64
     (loop $next_byte
       (local.set $this_byte (i32.load8_u (local.get $loop_offset)))
 
@@ -59,7 +59,7 @@
       (local.set $str_loc (i32.add (local.get $str_loc) (i32.const 1)))
 
       (local.set $loop_offset (i32.sub (local.get $loop_offset) (i32.const 1)))
-      (br_if $next_byte (i32.ge_u (local.get $loop_offset) (global.get $i64_bin_loc)))
+      (br_if $next_byte (i32.ge_u (local.get $loop_offset) (global.get $time_loc)))
     )
   )
 
@@ -95,35 +95,42 @@
   ;; Public API
   ;; *******************************************************************************************************************
 
-  ;; Dummy start function to keep WASI.js happy
-  (func (export "_start"))
-
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  ;; Write the raw system clock time to standard out
-  (func (export "writeTimeNanos")
+  ;; Fetch the raw system clock time to standard out
+  (func (export "getTimeNanos")
+        (param $clock_id         i32)
+        (param $write_to_console i32)
+        (result i32)
+
     ;; What's the time Mr WASI?
     (call $wasi_clock_time_get
-      (i32.const 0)             ;; Clock id 0 = Realtime clock
-      (i64.const 1)             ;; Precision
-      (global.get $i64_bin_loc) ;; Write clock time to this location
+      (local.get $clock_id)
+      (i64.const 1)          ;; Precision
+      (global.get $time_loc) ;; Write clock time to this location
     )
     drop
 
-    ;; Convert i64 to ASCII and print
+    ;; Convert i64 to ASCII
     (call $i64_to_hex_str)
-    (call $println (global.get $i64_str_loc) (i32.const 16))
+
+    (if (local.get $write_to_console)
+      (call $println (global.get $i64_str_loc) (i32.const 16))
+    )
+
+    ;; Return pointer to i64 string for anyone that cares
+    (global.get $i64_str_loc)
   )
 
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ;; Supply test value to function i64_to_hex_str
   (func (export "test_i64ToHexStr")
         (param $i64_arg i64)
+        (result i32)
 
     ;; Store the test value at the same location $wasi_clock_time_get writes its data
-    (i64.store (global.get $i64_bin_loc) (local.get $i64_arg))
+    (i64.store (global.get $time_loc) (local.get $i64_arg))
 
-    ;; Convert i64 to ASCII and print
     (call $i64_to_hex_str)
-    (call $println (global.get $i64_str_loc) (i32.const 16))
+    (global.get $i64_str_loc)
   )
 )

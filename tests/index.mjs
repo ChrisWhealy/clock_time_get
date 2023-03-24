@@ -3,18 +3,10 @@ import { WASI } from 'wasi'
 
 const wasmFilePath = "./bin/clock_time_get.wasm"
 
-const CLOCK_ID_REALTIME = 0
-const CLOCK_ID_MONOTONIC = 1
-const CLOCK_ID_PROCESS_CPUTIME = 2
-const CLOCK_ID_THREAD_CPUTIME = 3
-
-const clockIdMap = new Map()
-
-clockIdMap.set(CLOCK_ID_REALTIME, "Realtime clock   :")
-clockIdMap.set(CLOCK_ID_MONOTONIC, "Monotonic clock  :")
-clockIdMap.set(CLOCK_ID_PROCESS_CPUTIME, "Process CPU time :")
-clockIdMap.set(CLOCK_ID_THREAD_CPUTIME, "Thread CPU time  :")
-
+const testVals = [
+  "0xdeadbeefdeadbeef",
+  "0xbadc0ffee0ddf00d",
+]
 
 let wasmMem8
 
@@ -39,9 +31,15 @@ const startWasmModule =
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Off we go!
 startWasmModule(wasmFilePath)
-  .then(wasmFns =>
-    clockIdMap.forEach((desc, clockId) => {
-      let timePtr = wasmFns.getTimeNanos(clockId, false)
-      console.log(`${desc} ${new TextDecoder().decode(wasmMem8.slice(timePtr, timePtr + 16))}`)
+  .then(wasmFns => {
+    testVals.forEach((testVal, idx) => {
+      let timePtr = wasmFns.test_i64ToHexStr(BigInt(testVal))
+      let result = `0x${new TextDecoder().decode(wasmMem8.slice(timePtr, timePtr + 16))}`
+
+      if (result === testVals[idx]) {
+        console.log(`Test ${idx} ✅`)
+      } else {
+        console.error(`Test ${idx} ❌ Got ${result}, expected ${testVals[idx]}`)
+      }
     })
-  )
+  })
