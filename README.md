@@ -1,30 +1,31 @@
-# Calling `clock_time_get` from WebAssembly
+# Using WASI to Call "OS-like" From WebAssembly
 
-Generally speaking, the host environment can make any functionality avaliable to the WebAssembly guest module; however, the object of the exercise here is to call two "OS" level functions: `clock_time_get` and `fd_write`.
+Generally speaking, the WebAssembly host environment can make ***any*** functionality avaliable to the guest module; however, the object of the exercise here is specifically to call functions that you would normally expect to be direct calls into the operating system.
 
-***IMPORTANT***<br>
-The term "OS" has delberately been placed in quotation marks to indicate that the functions being called might not be implemented directly by the machine's operating system.
-In fact, all WebAssembly knows is that its host environment has provided an implementation of these functions.
-In one sense, how these functions have been implemented is really neither here nor there.
+However, due to the fact that a WebAssembly module is entirely isolated from the actual operating system, it becomes necessary for the host environment to supply, or at the very least, emulate, any underlying operating system functionality that might be needed.
+
+This is the role of the [WebAssembly System Interface](https://wasi.dev/).
+Depending on who is acting as the host environment, it provides either a very thin interface directly into the underlying OS operations, or it uses a host language like JavaScript to emulate this functionality.
+Either way, a WebAssembly program cannot tell this difference (and really has no need to tell the difference).
 
 ## WebAssembly System Interface (WASI)
 
 Having just said that WebAssembly does not care how these external functions have been implemented, let me now slightly contradict myself...
 
-The typical develpment scenario is that you will write your application in some high level language, such as Rust, then specify WebAssembly as your compilation target.
+The typical WebAssembly develpment scenario is one in which you write your application in some high level language such as Rust, then specify WebAssembly as your compilation target.
 
-If your Rust program were compiled to some other target, then the compiled code would be typically be invoked directly by the operating, and all the operations within your program that interact with the operating system (such as opening/writing/closing files etc) would run as normal.
+If your Rust program were compiled to some other target such as `macOs`, then the compiled binary would be invoked directly by the operating system.
+Naturally enough, all the operations within your program that interact with the operating system (such as opening/writing/closing files, sending data over the network etc) would run as normal because there is direct interaction between your program and the OS.
 
-However, as soon as you make WebAssembly your compilation target, your program is immediately isolated (or "sand-boxed") from the host environment, and any access to parts of the system such as the filesystem or the network are explicitly blocked - unlss your WebAssembly program makes a specific request for such access.
+However, as soon as you make WebAssembly your compilation target, your program is immediately isolated (or "sand-boxed") from the operating system, and any access to things such as the filesystem or the network are explicitly blocked - unless your WebAssembly program makes a specific request for such access.
 
-This is where the [WebAssembly System Interface](https://wasi.dev/) is needed.
-WASI is an emulation layer that provides all the functions an application (written say in Rust) would expect to call in the operating system.
+This is where the [WASI](https://wasi.dev/) becomes the vital bridge between your application and the underlying operating system.
+
+## NodeJS Implementation
 
 NodeJS provides an out-of-the-box WASI implementation; however, in order to make use of this particular library, `node` must be invoked with the command line flag `--experimental-wasi-unstable-preview1`.
 
 In a browser, multiple WASI emulation libraries have been writtem but to keep things simple, I have provided a minimal implementation of only the two WASI functions we are calling `clock_time_get` and `fd_write`.
-
-## NodeJS Implementation
 
 The values of the four system clocks as hexadecimal strings to standard out:
 
