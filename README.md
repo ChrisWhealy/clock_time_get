@@ -2,9 +2,9 @@
 
 Generally speaking, the WebAssembly host environment can make ***any*** functionality avaliable to the guest module; however, the object of the exercise here is specifically to call functions that you would normally expect to be direct calls into the operating system.
 
-However, due to the fact that a WebAssembly module is entirely isolated from the actual operating system, it becomes necessary for the host environment to supply, or at the very least, emulate, any underlying operating system functionality that might be needed.
+However, due to the fact that a WebAssembly module is entirely isolated from the actual operating system, it becomes necessary for the host environment either to pass such calls through to the OS, or by it emulating the required functionality.
+Either way, this is the role of the [WebAssembly System Interface](https://wasi.dev/).
 
-This is the role of the [WebAssembly System Interface](https://wasi.dev/).
 Depending on who is acting as the host environment, it provides either a very thin interface directly into the underlying OS operations, or it uses a host language like JavaScript to emulate this functionality.
 Either way, a WebAssembly program cannot tell this difference (and really has no need to tell the difference).
 
