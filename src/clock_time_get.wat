@@ -1,5 +1,8 @@
 (module
-  ;; Host functions provided by WASI
+  ;; Functions provided by the host environment.
+  ;; For the server-side case, these functions are implemented by WASI library built in to NodeJS, but in the client
+  ;; side case, a minimal emulation of clock_time_get and fd_write has been provided instead of pulling in a full
+  ;; client-side implementation of WASI
   (import "wasi" "clock_time_get"
     (func $wasi_clock_time_get
           (param i32 i64 i32)
@@ -23,21 +26,21 @@
 
   ;; Memory offsets
   (global $time_loc          i32 (i32.const 16))
-  (global $i64_str_loc       i32 (i32.const 24))
+  (global $time_str_ptr      i32 (i32.const 24))
   (global $fd_write_data_loc i32 (i32.const 44))
 
-  ;; ASCII lookup table where each character occurs at its corresponding offset
+  ;; ASCII lookup table where each hexadecimal character occurs at its corresponding offset
   (data (i32.const 0) "0123456789abcdef")
 
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ;; Convert the 8 bytes of an i64 into a 16 character ASCII hex string.
   (func $i64_to_hex_str
-    (local $str_loc     i32)
+    (local $str_ptr     i32)
     (local $loop_offset i32)
     (local $this_byte   i32)
 
     ;; Set offset of current string byte to the output string's start offset
-    (local.set $str_loc (global.get $i64_str_loc))
+    (local.set $str_ptr (global.get $time_str_ptr))
     (local.set $loop_offset (i32.add (global.get $time_loc) (i32.const 7)))
 
     ;; Using little-endian byte order (working from right to left), parse each byte of the i64
@@ -46,17 +49,17 @@
 
       ;; Store top half of the current byte as an ASCII chararcter and bump the output offset
       (i32.store8
-        (local.get $str_loc)
+        (local.get $str_ptr)
         (i32.load8_u (i32.shr_u (i32.and (local.get $this_byte) (i32.const 0xF0)) (i32.const 4)))
       )
-      (local.set $str_loc (i32.add (local.get $str_loc) (i32.const 1)))
+      (local.set $str_ptr (i32.add (local.get $str_ptr) (i32.const 1)))
 
       ;; Store bottom half of the current byte as an ASCII chararcter and bump the output offset
       (i32.store8
-        (local.get $str_loc)
+        (local.get $str_ptr)
         (i32.load8_u (i32.and (local.get $this_byte) (i32.const 0x0F)))
       )
-      (local.set $str_loc (i32.add (local.get $str_loc) (i32.const 1)))
+      (local.set $str_ptr (i32.add (local.get $str_ptr) (i32.const 1)))
 
       (local.set $loop_offset (i32.sub (local.get $loop_offset) (i32.const 1)))
       (br_if $next_byte (i32.ge_u (local.get $loop_offset) (global.get $time_loc)))
@@ -66,14 +69,14 @@
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ;; Append a line feed character to the supplied string, then write it to standard out
   (func $println
-        (param $str_loc i32)
+        (param $str_ptr i32)
         (param $str_len i32)
 
     ;; Append a line feed character to the end of the string
-    (i32.store (i32.add (local.get $str_loc) (local.get $str_len)) (i32.const 0x0A))
+    (i32.store (i32.add (local.get $str_ptr) (local.get $str_len)) (i32.const 0x0A))
 
     ;; Store offset and (length + 1) of the data on which fd_write will operate
-    (i32.store (global.get $fd_write_data_loc) (local.get $str_loc))
+    (i32.store (global.get $fd_write_data_loc) (local.get $str_ptr))
     (i32.store
       (i32.add (global.get $fd_write_data_loc) (i32.const 4))
       (i32.add (local.get $str_len) (i32.const 1))
@@ -96,7 +99,7 @@
   ;; *******************************************************************************************************************
 
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  ;; Fetch the raw system clock time to standard out
+  ;; Fetch the time of the specified clock and optionally write that value to stdout
   (func (export "getTimeNanos")
         (param $clock_id         i32)
         (param $write_to_console i32)
@@ -114,11 +117,11 @@
     (call $i64_to_hex_str)
 
     (if (local.get $write_to_console)
-      (call $println (global.get $i64_str_loc) (i32.const 16))
+      (call $println (global.get $time_str_ptr) (i32.const 16))
     )
 
-    ;; Return pointer to i64 string for anyone that cares
-    (global.get $i64_str_loc)
+    ;; Return pointer to ASCII time value for anyone that cares
+    (global.get $time_str_ptr)
   )
 
   ;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -131,6 +134,6 @@
     (i64.store (global.get $time_loc) (local.get $i64_arg))
 
     (call $i64_to_hex_str)
-    (global.get $i64_str_loc)
+    (global.get $time_str_ptr)
   )
 )

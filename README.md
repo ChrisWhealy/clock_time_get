@@ -1,11 +1,11 @@
-# Using WASI to Call "OS-like" From WebAssembly
+# Using WASI to Call "OS-like" Functions From WebAssembly
 
 Generally speaking, the WebAssembly host environment can make ***any*** functionality avaliable to the guest module; however, the object of the exercise here is specifically to call functions that you would normally expect to be direct calls into the operating system.
 
-However, due to the fact that a WebAssembly module is entirely isolated from the actual operating system, it becomes necessary for the host environment either to pass such calls through to the OS, or by it emulating the required functionality.
+However, due to the fact that a WebAssembly module is entirely isolated from the actual operating system, it becomes necessary for the host environment either to pass such calls through to the actual OS, or provide an emulation of the required functionality.
 Either way, this is the role of the [WebAssembly System Interface](https://wasi.dev/).
 
-Depending on who is acting as the host environment, it provides either a very thin interface directly into the underlying OS operations, or it uses a host language like JavaScript to emulate this functionality.
+Depending on who is acting as the host environment, WASI provides either a very thin interface directly into the underlying OS, or it provides an emulation implemented in the host environment's language (E.G. JavaScript for NodeJS).
 Either way, a WebAssembly program cannot tell this difference (and really has no need to tell the difference).
 
 ## WebAssembly System Interface (WASI)
@@ -19,15 +19,13 @@ Naturally enough, all the operations within your program that interact with the 
 
 However, as soon as you make WebAssembly your compilation target, your program is immediately isolated (or "sand-boxed") from the operating system, and any access to things such as the filesystem or the network are explicitly blocked - unless your WebAssembly program makes a specific request for such access.
 
-This is where the [WASI](https://wasi.dev/) becomes the vital bridge between your application and the underlying operating system.
+This is where the [WASI](https://wasi.dev/) becomes the vital bridge between your sand-bodex `.wasm` application and the underlying operating system.
 
 ## NodeJS Implementation
 
 NodeJS provides an out-of-the-box WASI implementation; however, in order to make use of this particular library, `node` must be invoked with the command line flag `--experimental-wasi-unstable-preview1`.
 
-In a browser, multiple WASI emulation libraries have been writtem but to keep things simple, I have provided a minimal implementation of only the two WASI functions we are calling `clock_time_get` and `fd_write`.
-
-The values of the four system clocks as hexadecimal strings to standard out:
+The values of the four system clocks are written as hexadecimal strings to standard out:
 
 | Clock Id | Description
 |---|---
@@ -38,8 +36,10 @@ The values of the four system clocks as hexadecimal strings to standard out:
 
 ## Browser Implementation
 
+In a browser, multiple WASI emulation libraries have been written, but to keep things simple, I have provided a minimal implementation of only the two WASI functions we are calling: `clock_time_get` and `fd_write`.
+
 Only the value of the realtime system clock (id `0`) is written to both the browser's console and the browser screen.
-This is because the browser must provide an emulation of all the WASI functions needed by the `.wasm` module, and in this case, only the realtime clock (clock id `0`) has been implemented.
+In this case, the emulation of `clock_time_get` provided by the JavaScript layer has implemented only the realtime clock (clock id `0`).
 
 ## Prerequisites
 
@@ -79,7 +79,7 @@ python3 noCacheHttpServer.py
 Serving HTTP on :: port 8080 (http://[::]:8080/) ...
 ```
 
-Point your browser to <http://localhost:8080> and you will see the realtime clock value on both the browser screen and in the browser's console.
+Point your browser to <http://localhost:8080> and the realtime clock value will be written both to the browser's screen and console.
 
 ## Coding
 
