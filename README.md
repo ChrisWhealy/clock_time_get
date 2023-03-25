@@ -1,6 +1,6 @@
 # Using WASI to Call "OS-like" Functions From WebAssembly
 
-Generally speaking, the WebAssembly host environment can make ***any*** functionality avaliable to the guest module; however, the object of the exercise here is specifically to call functions that you would normally expect to be direct calls into the operating system.
+Generally speaking, the WebAssembly host environment can make ***any*** functionality available to the guest module; however, the object of the exercise here is specifically to call functions that you would normally expect to be direct calls into the operating system.
 
 However, due to the fact that a WebAssembly module is entirely isolated from the actual operating system, it becomes necessary for the host environment either to pass such calls through to the actual OS, or provide an emulation of the required functionality.
 Either way, this is the role of the [WebAssembly System Interface](https://wasi.dev/).
@@ -12,14 +12,14 @@ Either way, a WebAssembly program cannot tell this difference (and really has no
 
 Having just said that WebAssembly does not care how these external functions have been implemented, let me now slightly contradict myself...
 
-The typical WebAssembly develpment scenario is one in which you write your application in some high level language such as Rust, then specify WebAssembly as your compilation target.
+The typical WebAssembly development scenario is one in which you write your application in some high level language such as Rust, then specify WebAssembly as your compilation target.
 
 If your Rust program were compiled to some other target such as `macOs`, then the compiled binary would be invoked directly by the operating system.
 Naturally enough, all the operations within your program that interact with the operating system (such as opening/writing/closing files, sending data over the network etc) would run as normal because there is direct interaction between your program and the OS.
 
 However, as soon as you make WebAssembly your compilation target, your program is immediately isolated (or "sand-boxed") from the operating system, and any access to things such as the filesystem or the network are explicitly blocked - unless your WebAssembly program makes a specific request for such access.
 
-This is where the [WASI](https://wasi.dev/) becomes the vital bridge between your sand-bodex `.wasm` application and the underlying operating system.
+This is where the [WASI](https://wasi.dev/) becomes the vital bridge between your sand-boxed `.wasm` application and the underlying operating system.
 
 ## NodeJS Implementation
 
